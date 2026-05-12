@@ -1220,38 +1220,66 @@ function applyImport(payload, mode) {
 
 let importMode = 'merge';
 
-// ── APPLE TOUCH ICON（主屏幕图标）──
+// ── APPLE TOUCH ICON（主屏幕图标，纯 canvas 绘制，不依赖 emoji 字体）──
 (function() {
   try {
-    const size = 180;
-    const canvas = document.createElement('canvas');
-    canvas.width = canvas.height = size;
-    const ctx = canvas.getContext('2d');
-    // 圆角矩形背景（渐变绿色，与 app 主色一致）
-    const grad = ctx.createLinearGradient(0, 0, size, size);
-    grad.addColorStop(0, '#3a8090');
-    grad.addColorStop(1, '#2d9e7a');
-    ctx.fillStyle = grad;
-    const r = 36;
+    const S = 180;
+    const c = document.createElement('canvas');
+    c.width = c.height = S;
+    const ctx = c.getContext('2d');
+
+    // 背景渐变
+    const g = ctx.createLinearGradient(0, 0, S, S);
+    g.addColorStop(0, '#3a8090'); g.addColorStop(1, '#2d9e7a');
+    ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.moveTo(r, 0); ctx.lineTo(size-r, 0);
-    ctx.arcTo(size, 0, size, r, r);
-    ctx.lineTo(size, size-r);
-    ctx.arcTo(size, size, size-r, size, r);
-    ctx.lineTo(r, size);
-    ctx.arcTo(0, size, 0, size-r, r);
-    ctx.lineTo(0, r);
-    ctx.arcTo(0, 0, r, 0, r);
-    ctx.closePath();
+    ctx.roundRect(0, 0, S, S, 36);
     ctx.fill();
-    // 猫咪 emoji
-    ctx.font = '108px serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('🐱', size / 2, size / 2 + 4);
-    // 写入 link 标签
+
+    const cx = S / 2, cy = S / 2 + 8;
+
+    // 耳朵（先画，在头部下面）
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.beginPath(); ctx.moveTo(cx-40,cy-38); ctx.lineTo(cx-62,cy-72); ctx.lineTo(cx-10,cy-54); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(cx+40,cy-38); ctx.lineTo(cx+62,cy-72); ctx.lineTo(cx+10,cy-54); ctx.closePath(); ctx.fill();
+    // 耳朵内粉色
+    ctx.fillStyle = 'rgba(255,182,193,0.75)';
+    ctx.beginPath(); ctx.moveTo(cx-38,cy-41); ctx.lineTo(cx-54,cy-63); ctx.lineTo(cx-16,cy-52); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(cx+38,cy-41); ctx.lineTo(cx+54,cy-63); ctx.lineTo(cx+16,cy-52); ctx.closePath(); ctx.fill();
+
+    // 脸部圆形
+    ctx.fillStyle = 'rgba(255,255,255,0.94)';
+    ctx.beginPath(); ctx.arc(cx, cy, 56, 0, Math.PI*2); ctx.fill();
+
+    // 眼睛
+    ctx.fillStyle = '#2d5a50';
+    ctx.beginPath(); ctx.ellipse(cx-20, cy-10, 9, 10, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx+20, cy-10, 9, 10, 0, 0, Math.PI*2); ctx.fill();
+    // 眼睛高光
+    ctx.fillStyle = 'white';
+    ctx.beginPath(); ctx.arc(cx-16, cy-14, 3.5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx+24, cy-14, 3.5, 0, Math.PI*2); ctx.fill();
+
+    // 鼻子
+    ctx.fillStyle = '#e07c8a';
+    ctx.beginPath(); ctx.moveTo(cx, cy+10); ctx.lineTo(cx-6, cy+3); ctx.lineTo(cx+6, cy+3); ctx.closePath(); ctx.fill();
+
+    // 嘴
+    ctx.strokeStyle = '#c0607a'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(cx, cy+10); ctx.quadraticCurveTo(cx-14,cy+22,cx-20,cy+17); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, cy+10); ctx.quadraticCurveTo(cx+14,cy+22,cx+20,cy+17); ctx.stroke();
+
+    // 胡须
+    ctx.strokeStyle = 'rgba(80,60,40,0.35)'; ctx.lineWidth = 1.5;
+    [[-14,cy+4,-58,cy-4],[-14,cy+9,-58,cy+9],[-14,cy+14,-58,cy+22]].forEach(([x1,y1,x2,y2])=>{
+      ctx.beginPath(); ctx.moveTo(cx+x1,y1); ctx.lineTo(cx+x2,y2); ctx.stroke();
+    });
+    [[14,cy+4,58,cy-4],[14,cy+9,58,cy+9],[14,cy+14,58,cy+22]].forEach(([x1,y1,x2,y2])=>{
+      ctx.beginPath(); ctx.moveTo(cx+x1,y1); ctx.lineTo(cx+x2,y2); ctx.stroke();
+    });
+
     const link = document.getElementById('apple-touch-icon');
-    if (link) link.setAttribute('href', canvas.toDataURL('image/png'));
+    if (link) link.setAttribute('href', c.toDataURL('image/png'));
   } catch(e) {}
 })();
 
