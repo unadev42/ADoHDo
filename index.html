@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>ADoHDo 🐱</title>
-  <!-- 浏览器标签图标 -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+  <!-- 浏览器标签图标（Twemoji 开源猫咪） -->
+  <link rel="icon" href="https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/svg/1f431.svg" type="image/svg+xml">
   <!-- iOS 保存到主屏幕图标（由 JS 动态生成） -->
   <link rel="apple-touch-icon" id="apple-touch-icon" href="">
   <!-- 保存为 app 后隐藏 Safari 地址栏 -->
@@ -252,7 +252,7 @@
     .pm-btn { display: block; width: 100%; text-align: left; padding: 6px 10px; border: none; background: none; cursor: pointer; border-radius: 6px; font-size: 13px; color: var(--text); white-space: nowrap; }
     .pm-btn:hover { background: var(--teal-light); color: var(--teal); }
     .pm-divider { height: 1px; background: var(--teal-light); margin: 4px 0; }
-    .pm-date { width: 100%; padding: 5px 8px; border: 1.5px solid var(--teal-light); border-radius: 6px; font-size: 12px; outline: none; color: var(--text); margin-top: 2px; }
+    .pm-date { width: 100%; padding: 6px 8px; border: 1.5px solid var(--teal-light); border-radius: 6px; font-size: 13px; outline: none; color: var(--text); margin-top: 2px; background: white; -webkit-appearance: none; appearance: none; box-sizing: border-box; }
     .pm-date:focus { border-color: var(--teal); }
     .icon-btn.postpone:hover { background: #fff8f0; color: var(--orange); }
 
@@ -373,6 +373,8 @@
 
       /* postpone menu opens upward */
       .postpone-menu { bottom: calc(100% + 4px); top: auto; }
+      /* iOS date input 必须 16px 否则文字不显示 */
+      .pm-date { font-size: 16px; min-height: 36px; }
 
       /* filter row scrollable */
       .filter-row { flex-wrap: nowrap; }
@@ -879,7 +881,7 @@ function renderHeatmap() {
 // ── POSTPONE ──
 function postponeTask(id, days) {
   const t = todos.find(x => x.id === id); if (!t) return;
-  const base = t.date && t.date > todayStr() ? t.date : todayStr();
+  const base = t.date || todayStr();
   const d = new Date(base); d.setDate(d.getDate() + days);
   t.date = d.toISOString().slice(0,10);
   saveTodos(); render();
@@ -1220,15 +1222,15 @@ function applyImport(payload, mode) {
 
 let importMode = 'merge';
 
-// ── APPLE TOUCH ICON（主屏幕图标，纯 canvas 绘制，不依赖 emoji 字体）──
+// ── APPLE TOUCH ICON（加载 Twemoji 开源猫咪 SVG，绘制到 canvas）──
 (function() {
   try {
-    const S = 180;
-    const c = document.createElement('canvas');
-    c.width = c.height = S;
-    const ctx = c.getContext('2d');
+    const S = 180, PAD = 22;
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = S;
+    const ctx = canvas.getContext('2d');
 
-    // 背景渐变
+    // 绿色渐变背景
     const g = ctx.createLinearGradient(0, 0, S, S);
     g.addColorStop(0, '#3a8090'); g.addColorStop(1, '#2d9e7a');
     ctx.fillStyle = g;
@@ -1236,50 +1238,15 @@ let importMode = 'merge';
     ctx.roundRect(0, 0, S, S, 36);
     ctx.fill();
 
-    const cx = S / 2, cy = S / 2 + 8;
-
-    // 耳朵（先画，在头部下面）
-    ctx.fillStyle = 'rgba(255,255,255,0.92)';
-    ctx.beginPath(); ctx.moveTo(cx-40,cy-38); ctx.lineTo(cx-62,cy-72); ctx.lineTo(cx-10,cy-54); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(cx+40,cy-38); ctx.lineTo(cx+62,cy-72); ctx.lineTo(cx+10,cy-54); ctx.closePath(); ctx.fill();
-    // 耳朵内粉色
-    ctx.fillStyle = 'rgba(255,182,193,0.75)';
-    ctx.beginPath(); ctx.moveTo(cx-38,cy-41); ctx.lineTo(cx-54,cy-63); ctx.lineTo(cx-16,cy-52); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(cx+38,cy-41); ctx.lineTo(cx+54,cy-63); ctx.lineTo(cx+16,cy-52); ctx.closePath(); ctx.fill();
-
-    // 脸部圆形
-    ctx.fillStyle = 'rgba(255,255,255,0.94)';
-    ctx.beginPath(); ctx.arc(cx, cy, 56, 0, Math.PI*2); ctx.fill();
-
-    // 眼睛
-    ctx.fillStyle = '#2d5a50';
-    ctx.beginPath(); ctx.ellipse(cx-20, cy-10, 9, 10, 0, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(cx+20, cy-10, 9, 10, 0, 0, Math.PI*2); ctx.fill();
-    // 眼睛高光
-    ctx.fillStyle = 'white';
-    ctx.beginPath(); ctx.arc(cx-16, cy-14, 3.5, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx+24, cy-14, 3.5, 0, Math.PI*2); ctx.fill();
-
-    // 鼻子
-    ctx.fillStyle = '#e07c8a';
-    ctx.beginPath(); ctx.moveTo(cx, cy+10); ctx.lineTo(cx-6, cy+3); ctx.lineTo(cx+6, cy+3); ctx.closePath(); ctx.fill();
-
-    // 嘴
-    ctx.strokeStyle = '#c0607a'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(cx, cy+10); ctx.quadraticCurveTo(cx-14,cy+22,cx-20,cy+17); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx, cy+10); ctx.quadraticCurveTo(cx+14,cy+22,cx+20,cy+17); ctx.stroke();
-
-    // 胡须
-    ctx.strokeStyle = 'rgba(80,60,40,0.35)'; ctx.lineWidth = 1.5;
-    [[-14,cy+4,-58,cy-4],[-14,cy+9,-58,cy+9],[-14,cy+14,-58,cy+22]].forEach(([x1,y1,x2,y2])=>{
-      ctx.beginPath(); ctx.moveTo(cx+x1,y1); ctx.lineTo(cx+x2,y2); ctx.stroke();
-    });
-    [[14,cy+4,58,cy-4],[14,cy+9,58,cy+9],[14,cy+14,58,cy+22]].forEach(([x1,y1,x2,y2])=>{
-      ctx.beginPath(); ctx.moveTo(cx+x1,y1); ctx.lineTo(cx+x2,y2); ctx.stroke();
-    });
-
-    const link = document.getElementById('apple-touch-icon');
-    if (link) link.setAttribute('href', c.toDataURL('image/png'));
+    // 加载 Twemoji 猫咪 SVG
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function() {
+      ctx.drawImage(img, PAD, PAD, S - PAD*2, S - PAD*2);
+      const link = document.getElementById('apple-touch-icon');
+      if (link) link.setAttribute('href', canvas.toDataURL('image/png'));
+    };
+    img.src = 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/svg/1f431.svg';
   } catch(e) {}
 })();
 
